@@ -3,7 +3,7 @@ const { Telegraf } = require("telegraf");
 const express = require('express');
 const bodyParser = require("body-parser");
 const axios = require("axios");
-const path = require('path'); // Added to serve static files
+const path = require('path');  // For serving static files (like images)
 
 const app = express();
 const port = process.env.PORT || 4040;
@@ -13,7 +13,7 @@ const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 const URI = `/webhook/${BOT_TOKEN}`;
 const WEBHOOK_URL = `${SERVER_URL}${URI}`;
 
-// Step 1: Serve static files from the 'public' folder
+// Serve static files from the public folder
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(express.json());
@@ -38,7 +38,6 @@ const bot = new Telegraf(BOT_TOKEN);
 const web_link = "https://newcatsclonev1460.netlify.app";
 const community_link = "https://t.me/coderushdevs";
 
-// Step 2: Modify bot start to send image with buttons
 bot.start(async (ctx) => {
     const startPayload = ctx.startPayload;
     const urlSent = `${web_link}?ref=${startPayload}`;
@@ -46,19 +45,15 @@ bot.start(async (ctx) => {
     const userName = user.username ? `@${user.username}` : user.first_name;
 
     try {
-        // Step 3: Send the image (make sure the image is placed in the 'public' folder)
+        // Send image with the message (Image should be in the 'public' folder)
         await ctx.replyWithPhoto({ source: 'public/Like.jpg' }, {
             caption: `*How cool is your Telegram profile?*\nCheck your ratings and receive rewards 🔧`,
             parse_mode: 'Markdown',
             reply_markup: {
                 inline_keyboard: [
-                    // Styled buttons with a visual enhancement (transparent effect with space and emojis)
-                    [
-                        { text: "✨  Let's go  ✨", web_app: { url: urlSent } },  // Simulating a light, glowy button
-                    ],
-                    [
-                        { text: "👥 Join our Community 👥", url: community_link }
-                    ]
+                    // Adding emojis to style buttons like the image you provided
+                    [{ text: "⚡️ Start Now! ⚡️", web_app: { url: urlSent } }],
+                    [{ text: "👥 Join our Community 👥", url: community_link }]
                 ],
             }
         });
