@@ -43,18 +43,20 @@ bot.start(async (ctx) => {
     const userName = user.username ? `@${user.username}` : user.first_name;
 
     try {
-        // Send image first
-        await ctx.replyWithPhoto({ source: 'public/like.jpg' }); // or provide a URL if it's hosted online
-
-        // Send the welcome message with buttons after the image
-        await ctx.replyWithMarkdown(`*Hey, ${userName}! Welcome to NewCats!*\nHow cool is your Cat?\nGot friends, relatives, co-workers?\nBring them all into the game now.\nMore buddies, more coins.`, {
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: "✨Start now!✨", web_app: { url: urlSent } }],
-                    [{ text: "👥Join Community👥", url: community_link }]
-                ],
-            },
-        });
+        // Send the image with a caption
+        await ctx.replyWithPhoto(
+            { source: 'public/like.jpg' }, // or provide a URL if it's hosted online
+            {
+                caption: `*Hey, ${userName}! Welcome to NewCats!*\nHow cool is your Cat?\nGot friends, relatives, co-workers?\nBring them all into the game now.\nMore buddies, more coins.`,
+                parse_mode: 'Markdown', // Ensure markdown is used in the caption
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: "✨Start now!✨", web_app: { url: urlSent } }],
+                        [{ text: "👥Join Community👥", url: community_link }]
+                    ],
+                },
+            }
+        );
     } catch (error) {
         if (error.response && error.response.data && error.response.data.description === 'Forbidden: bot was blocked by the user') {
             console.log(`Failed to send message to ${userName} (${user.id}): bot was blocked by the user.`);
