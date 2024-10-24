@@ -1,9 +1,8 @@
 require("dotenv").config();
-const { Telegraf } = require("telegraf");
+const { Telegraf, Markup } = require("telegraf");
 const express = require('express');
 const bodyParser = require("body-parser");
 const axios = require("axios");
-const path = require('path');  // For serving static files (like images)
 
 const app = express();
 const port = process.env.PORT || 4040;
@@ -12,9 +11,6 @@ const { BOT_TOKEN, SERVER_URL } = process.env;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 const URI = `/webhook/${BOT_TOKEN}`;
 const WEBHOOK_URL = `${SERVER_URL}${URI}`;
-
-// Serve static files from the public folder
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(express.json());
 app.use(bodyParser.json());
@@ -45,17 +41,17 @@ bot.start(async (ctx) => {
     const userName = user.username ? `@${user.username}` : user.first_name;
 
     try {
-        // Send image with the message (Image should be in the 'public' folder)
-        await ctx.replyWithPhoto({ source: 'public/Like.jpg' }, {
-            caption: `*How cool is your Telegram profile?*\nCheck your ratings and receive rewards 🔧`,
-            parse_mode: 'Markdown',
+        await ctx.replyWithMarkdown(`*Hey, ${userName}! Welcome to NewCats!*
+How cool is your Cat?
+Got friends, relatives, co-workers?
+Bring them all into the game now.
+More buddies, more coins.`, {
             reply_markup: {
                 inline_keyboard: [
-                    // Adding emojis to style buttons like the image you provided
-                    [{ text: "⚡️ Start Now! ⚡️", web_app: { url: urlSent } }],
-                    [{ text: "👥 Join our Community 👥", url: community_link }]
+                    [{ text: "⚡️Start now!⚡️", web_app: { url: urlSent } }],
+                    [{ text: "👥Join Community👥", url: community_link }]
                 ],
-            }
+            },
         });
     } catch (error) {
         if (error.response && error.response.data && error.response.data.description === 'Forbidden: bot was blocked by the user') {
