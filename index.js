@@ -12,6 +12,7 @@ const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 const URI = `/webhook/${BOT_TOKEN}`;
 const WEBHOOK_URL = `${SERVER_URL}${URI}`;
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(bodyParser.json());
 
@@ -41,14 +42,14 @@ bot.start(async (ctx) => {
     const userName = user.username ? `@${user.username}` : user.first_name;
 
     try {
-        await ctx.replyWithMarkdown(`*Hey, ${userName}! Welcome to NewCats!*
-How cool is your Cat?
-Got friends, relatives, co-workers?
-Bring them all into the game now.
-More buddies, more coins.`, {
+        // Send image first
+        await ctx.replyWithPhoto({ source: 'public/like.jpg' }); // or provide a URL if it's hosted online
+
+        // Send the welcome message with buttons after the image
+        await ctx.replyWithMarkdown(`*Hey, ${userName}! Welcome to NewCats!*\nHow cool is your Cat?\nGot friends, relatives, co-workers?\nBring them all into the game now.\nMore buddies, more coins.`, {
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "⚡️Start now!⚡️", web_app: { url: urlSent } }],
+                    [{ text: "✨Start now!✨", web_app: { url: urlSent } }],
                     [{ text: "👥Join Community👥", url: community_link }]
                 ],
             },
