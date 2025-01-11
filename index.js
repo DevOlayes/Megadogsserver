@@ -33,7 +33,7 @@ app.listen(port, async () => {
 
 const bot = new Telegraf(BOT_TOKEN);
 
-const web_link = "https://newcatsclonev1460.netlify.app";
+const web_link = "https://megadogsserver.onrender.com";
 const community_link = "https://t.me/coderushdevs";
 
 bot.start(async (ctx) => {
@@ -47,7 +47,7 @@ bot.start(async (ctx) => {
         await ctx.replyWithPhoto(
             { source: 'public/like.jpg' }, // or provide a URL if it's hosted online
             {
-                caption: `*Hey, ${userName}! Welcome to NewCats!*\nHow cool is your Cat?\nGot friends, relatives, co-workers?\nBring them all into the game now.\nMore buddies, more coins.`,
+                caption: `*Hey, ${userName}\n👋 Welcome to the MEGADOGS Adventure!*\n\n✨ **Play MEGADOGS**: Tap the dog bone and watch your balance fetch amazing rewards!\n🐕 **Mine for MEGA**: Collect MEGADOGS Tokens with every action.\n🔗 **Connect**: [MegaDog Telegram Pack](https://t.me/coderushdevs)`,
                 parse_mode: 'Markdown', // Ensure markdown is used in the caption
                 reply_markup: {
                     inline_keyboard: [
