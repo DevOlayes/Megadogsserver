@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+     "clean-install": "rm -rf node_modules && npm install",
+  "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
@@ -15,5 +16,9 @@
     "express": "^4.19.2",
     "fs-extra": "^11.2.0",
     "telegraf": "^4.16.3"
-  }
+  },
+  "engines": {
+  "node": "18.x"
+}
+
 }
