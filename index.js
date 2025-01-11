@@ -32,7 +32,7 @@ app.listen(port, async () => {
 
 const bot = new Telegraf(BOT_TOKEN);
 
-const web_link = "https://megadogsserver.onrender.com";
+const web_link = "https://megadogs1990.netlify.app";
 const community_link = "https://t.me/coderushdevs";
 
 bot.start(async (ctx) => {
