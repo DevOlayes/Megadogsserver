@@ -47,7 +47,7 @@ bot.start(async (ctx) => {
         await ctx.replyWithPhoto(
             { source: 'public/like.jpg' }, // or provide a URL if it's hosted online
             {
-                caption: `*Hey, ${userName}\n👋 Welcome to the MEGADOGS Adventures !*\n\n✨ **Play MEGADOGS**: Tap the dog bone and watch your balance fetch amazing rewards!\n🐕 **Mine for MEGA**: Collect MEGADOGS Tokens with every action.\n🔗 **Connect**: [MegaDog Telegram](https://t.me/coderushdevs)`,
+                caption: `*Hey, ${userName}\n👋 Welcome to MEGADOGS Adventures !*\n\n✨ **Play MEGADOGS**: Tap the dog bone and watch your balance fetch amazing rewards!\n🐕 **Mine for MEGA**: Collect MEGADOGS Tokens with every action.\n🔗 **Connect**: [MegaDog Telegram](https://t.me/coderushdevs)`,
                 parse_mode: 'Markdown', // Ensure markdown is used in the caption
                 reply_markup: {
                     inline_keyboard: [
