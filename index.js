@@ -4,6 +4,7 @@ const { Telegraf, Markup } = require("telegraf");
 const express = require('express');
 const bodyParser = require("body-parser");
 const axios = require("axios");
+const rateLimit = require('express-rate-limit'); // Import the rate limit middleware
 
 const app = express();
 const port = process.env.PORT || 4040;
@@ -12,6 +13,17 @@ const { BOT_TOKEN, SERVER_URL } = process.env;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 const URI = `/webhook/${BOT_TOKEN}`;
 const WEBHOOK_URL = `${SERVER_URL}${URI}`;
+
+// Configure the rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply the rate limiter to all requests
+app.use(limiter);
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
