@@ -5,34 +5,13 @@ const express = require('express');
 const bodyParser = require("body-parser");
 const axios = require("axios");
 const rateLimit = require('express-rate-limit');
-const admin = require('firebase-admin');
-
-// Initialize Firebase Admin (if you want backend Firestore access)
-let serviceAccount;
-try {
-  serviceAccount = require('./serviceAccountKey.json');
-} catch (error) {
-  console.log('No service account key found, using environment variables for Firebase');
-}
-
-if (serviceAccount) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-} else if (process.env.FIREBASE_PROJECT_ID) {
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault()
-  });
-}
-
-const db = admin.firestore();
 
 // Add health monitoring
 const http = require('http');
 let isHealthy = true;
 
 // Environment variables with defaults
-const port = process.env.PORT || 4040;
+const port = process.env.PORT || 10000;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const SERVER_URL = process.env.SERVER_URL;
 const RETRY_TIMEOUT = process.env.RETRY_TIMEOUT || 5000;
@@ -48,7 +27,7 @@ const community_link = "https://t.me/codesrushdev";
 // Enhanced rate limiter
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100, // Increased for API endpoints
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   skipFailedRequests: true,
@@ -63,7 +42,6 @@ const server = http.createServer(app);
 
 // Middleware
 app.use(limiter);
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(bodyParser.json());
 
@@ -104,7 +82,7 @@ const initWebhook = async (retries = 0) => {
 // Initialize bot with error handling
 const bot = new Telegraf(BOT_TOKEN);
 
-// Store sent messages to prevent duplicates (in production, use Redis or database)
+// Store sent messages to prevent duplicates
 const sentMessages = new Map();
 
 // Enhanced start command with referral support
@@ -120,43 +98,34 @@ bot.start(async (ctx) => {
   const user = ctx.message.from;
   const userName = user.username ? `@${user.username}` : user.first_name;
   
-  const sendMessage = async (retries = 0) => {
-    try {
-      await ctx.replyWithPhoto(
-        { url: 'https://via.placeholder.com/400x200/4A90E2/FFFFFF?text=MEGADOGS+WELCOME' },
-        {
-          caption: `*Hey, ${userName}! 🐕*\n\n` +
-                   `*Welcome to MEGADOGS Adventures!*\n\n` +
-                   `✨ *Play MEGADOGS*: Tap the dog bone and watch your balance fetch amazing rewards!\n` +
-                   `💰 *Mine for MEGA*: Collect MEGADOGS Tokens with every action.\n` +
-                   `👥 *Invite Friends*: Earn bonuses when friends join using your referral link!\n\n` +
-                   `*Get started now and join the adventure!* 🚀`,
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "🎮 Start Playing Now!", web_app: { url: urlSent } }],
-              [{ text: "👥 Join Community", url: community_link }],
-              [{ text: "📱 Share Referral", switch_inline_query: "Join MEGADOGS and earn with me! 🐕" }]
-            ],
-          },
-        }
-      );
-      
-      console.log(`✅ Start message sent to ${userName} (${user.id}) with${startPayload ? '' : 'out'} referral`);
-    } catch (error) {
-      if (error.response?.data?.description === 'Forbidden: bot was blocked by the user') {
-        console.log(`User ${userName} (${user.id}) has blocked the bot`);
-      } else {
-        console.error(`Error sending message to ${userName} (${user.id}):`, error.message);
-        if (retries < MAX_RETRIES) {
-          console.log(`Retrying message send in ${RETRY_TIMEOUT}ms...`);
-          setTimeout(() => sendMessage(retries + 1), RETRY_TIMEOUT);
-        }
+  try {
+    await ctx.reply(
+      `*Hey, ${userName}! 🐕*\n\n` +
+      `*Welcome to MEGADOGS Adventures!*\n\n` +
+      `✨ *Play MEGADOGS*: Tap the dog bone and watch your balance fetch amazing rewards!\n` +
+      `💰 *Mine for MEGA*: Collect MEGADOGS Tokens with every action.\n` +
+      `👥 *Invite Friends*: Earn bonuses when friends join using your referral link!\n\n` +
+      `*Get started now and join the adventure!* 🚀`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🎮 Start Playing Now!", web_app: { url: urlSent } }],
+            [{ text: "👥 Join Community", url: community_link }],
+            [{ text: "📱 Share Referral", switch_inline_query: "Join MEGADOGS and earn with me! 🐕" }]
+          ],
+        },
       }
+    );
+    
+    console.log(`✅ Start message sent to ${userName} (${user.id}) with${startPayload ? '' : 'out'} referral`);
+  } catch (error) {
+    if (error.response?.data?.description === 'Forbidden: bot was blocked by the user') {
+      console.log(`User ${userName} (${user.id}) has blocked the bot`);
+    } else {
+      console.error(`Error sending message to ${userName} (${user.id}):`, error.message);
     }
-  };
-  
-  await sendMessage();
+  }
 });
 
 // ========== SYNCED ENDPOINTS FOR FRONTEND USERCONTEXT.JS ==========
@@ -173,7 +142,7 @@ app.post('/api/sendWelcomeMessage', async (req, res) => {
     // Check if message was already sent (prevent duplicates)
     const messageKey = `welcome_${userId}`;
     const lastSent = sentMessages.get(messageKey);
-    if (lastSent && (Date.now() - lastSent) < 24 * 60 * 60 * 1000) { // 24 hours
+    if (lastSent && (Date.now() - lastSent) < 24 * 60 * 60 * 1000) {
       return res.status(200).json({ 
         success: true, 
         message: 'Welcome message already sent recently',
@@ -198,7 +167,6 @@ app.post('/api/sendWelcomeMessage', async (req, res) => {
       reply_markup: {
         inline_keyboard: [
           [{ text: "🚀 Open MEGADOGS", web_app: { url: web_link } }],
-          [{ text: "📊 View Dashboard", web_app: { url: `${web_link}/dashboard` } }],
           [{ text: "👥 Join Community", url: community_link }]
         ]
       }
@@ -217,7 +185,7 @@ app.post('/api/sendWelcomeMessage', async (req, res) => {
   } catch (error) {
     console.error('Error sending welcome message:', error.response?.data || error.message);
     
-    // Don't treat "blocked bot" as an error - frontend will handle this
+    // Don't treat "blocked bot" as an error
     if (error.response?.data?.description?.includes('bot was blocked')) {
       console.log(`User ${req.body.userId} has blocked the bot`);
       return res.status(200).json({ 
@@ -227,10 +195,10 @@ app.post('/api/sendWelcomeMessage', async (req, res) => {
       });
     }
     
-    // For other errors, still return success to frontend to avoid blocking user registration
+    // For other errors, still return success to frontend
     res.status(200).json({ 
       success: true, 
-      message: 'Welcome message queued (will retry)',
+      message: 'Welcome message queued',
       error: error.response?.data?.description || error.message 
     });
   }
@@ -270,7 +238,6 @@ app.post('/api/sendReferralNotification', async (req, res) => {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
-          [{ text: "📈 View Referrals", web_app: { url: `${web_link}/referrals` } }],
           [{ text: "🔗 Get Referral Link", callback_data: 'get_referral_link' }],
           [{ text: "🎮 Open App", web_app: { url: web_link } }]
         ]
@@ -291,7 +258,6 @@ app.post('/api/sendReferralNotification', async (req, res) => {
   } catch (error) {
     console.error('Error sending referral notification:', error.response?.data || error.message);
     
-    // Don't treat "blocked bot" as an error
     if (error.response?.data?.description?.includes('bot was blocked')) {
       console.log(`Referrer ${referrerId} has blocked the bot`);
       return res.status(200).json({ 
@@ -301,7 +267,6 @@ app.post('/api/sendReferralNotification', async (req, res) => {
       });
     }
     
-    // For other errors, still return success to avoid blocking the process
     res.status(200).json({ 
       success: true, 
       message: 'Referral notification queued',
@@ -375,38 +340,6 @@ app.post('/api/sendBotMessage', async (req, res) => {
   }
 });
 
-// Get user referral stats
-app.get('/api/user/:userId/referrals', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    
-    if (!serviceAccount) {
-      return res.status(500).json({ error: 'Firebase not configured on server' });
-    }
-
-    const userRef = db.collection('telegramUsers').doc(userId);
-    const userDoc = await userRef.get();
-    
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const userData = userDoc.data();
-    const referrals = userData.referrals || [];
-    
-    res.status(200).json({
-      success: true,
-      totalReferrals: referrals.length,
-      referrals: referrals,
-      refBonus: userData.refBonus || 0
-    });
-    
-  } catch (error) {
-    console.error('Error fetching referral data:', error);
-    res.status(500).json({ error: 'Failed to fetch referral data' });
-  }
-});
-
 // Clear sent messages cache (for testing/reset)
 app.delete('/api/clearMessageCache', (req, res) => {
   const previousSize = sentMessages.size;
@@ -422,7 +355,7 @@ app.delete('/api/clearMessageCache', (req, res) => {
 app.get('/api/messageCacheStats', (req, res) => {
   const stats = {
     totalEntries: sentMessages.size,
-    entries: Array.from(sentMessages.entries()).slice(0, 10) // First 10 entries
+    entries: Array.from(sentMessages.entries()).slice(0, 10)
   };
   
   res.status(200).json({
@@ -431,20 +364,14 @@ app.get('/api/messageCacheStats', (req, res) => {
   });
 });
 
-// Webhook handler with timeout
+// Webhook handler
 app.post(URI, (req, res) => {
-  const timeout = setTimeout(() => {
-    res.status(504).send('Webhook processing timeout');
-  }, 10000);
-  
   try {
     bot.handleUpdate(req.body);
-    res.status(200).send('Received Telegram webhook');
+    res.status(200).send('OK');
   } catch (error) {
     console.error('Error handling webhook:', error);
     res.status(500).send('Webhook processing error');
-  } finally {
-    clearTimeout(timeout);
   }
 });
 
@@ -483,7 +410,6 @@ server.listen(port, async () => {
   console.log('  POST /api/sendWelcomeMessage     - Send welcome to new users');
   console.log('  POST /api/sendReferralNotification - Notify referrers about new referrals');
   console.log('  POST /api/sendBotMessage         - Send custom messages');
-  console.log('  GET  /api/user/:userId/referrals - Get user referral stats');
   console.log('  GET  /api/messageCacheStats      - View cache stats');
   console.log('  DELETE /api/clearMessageCache    - Clear message cache');
   console.log('  GET  /health                     - Health check');
@@ -502,7 +428,7 @@ setInterval(() => {
     .catch(() => {
       isHealthy = false;
     });
-}, 60000); // Check health every minute
+}, 60000);
 
 // Clear old cache entries periodically (older than 7 days)
 setInterval(() => {
@@ -520,4 +446,4 @@ setInterval(() => {
   if (clearedCount > 0) {
     console.log(`🧹 Cleared ${clearedCount} old cache entries`);
   }
-}, 60 * 60 * 1000); // Run every hour
+}, 60 * 60 * 1000);
